@@ -7,86 +7,58 @@
  * 2. In most cases we need to use JSON.stringify
  *    and JSON.parse, typing the same logic is tedious
  *
- * 3. Default implementation of local storage doesn't
- *    bind key value to get/set methods
- *
  *
  *
  * Solution:
  *
- * 1. Create singleton LocalStorage class which stores instances
- *    in hash map
+ * 1. Modify get/set methods to use JSON.parse/stringify
  *
- * 2. Instances must be type safe
- *
- * 3. Key value must be bound to instance methods
+ * 2. Methods must be type safe
  **/
 
-class LocalStorage<T> {
-  private static storageInstancesMap: Record<string, LocalStorage<any>> = {};
+const createLocalStorage = <T extends Record<string, any>>() => ({
+  setItem<K extends keyof T>(key: K, value: T[K]) {
+    localStorage.setItem(key as string, JSON.stringify(value));
+  },
 
-  constructor(private key: string) {}
+  getItem(key: keyof T): T | null {
+    return JSON.parse("" + localStorage.getItem(key as string));
+  },
 
-  public static createStorage<T>(key: string) {
-    let storeInstance = LocalStorage.storageInstancesMap[key];
+  removeItem(key: keyof T) {
+    localStorage.removeItem(key as string);
+  },
 
-    if (!storeInstance) {
-      storeInstance = new LocalStorage(key);
-      LocalStorage.storageInstancesMap[key] = storeInstance;
-    }
-
-    return storeInstance as LocalStorage<T>;
-  }
-
-  public setItem(value: T) {
-    localStorage.setItem(this.key, JSON.stringify(value));
-  }
-
-  public getItem(): T | null {
-    return JSON.parse("" + localStorage.getItem(this.key));
-  }
-
-  public removeItem() {
-    localStorage.removeItem(this.key);
-  }
-
-  public static clear() {
+  clear() {
     localStorage.clear();
-  }
+  },
 
-  public static getLength() {
+  get length() {
     return localStorage.length;
-  }
+  },
 
-  public static key(i: number) {
+  key(i: number) {
     return localStorage.key(i);
-  }
-}
-
-// ~/src/constants/localStorage
-
-const FRUITS = "fruits";
+  },
+});
 
 // Usage
 
-type fruitsType = string[];
+interface ILocalStorageMap {
+  fruits: string[];
+  favouriteNumbers: number[];
+}
 
-const fruits = ["apples", "oranges", "pineapples"];
+const LocalStorage = createLocalStorage<ILocalStorageMap>();
 
-const fruitsStorage = LocalStorage.createStorage<fruitsType>(FRUITS);
+const fruits = ["apples", "oranges", "bananas"];
 
-fruitsStorage.setItem(fruits);
+LocalStorage.setItem("fruits", fruits);
 
-const fruitsFromStorage = fruitsStorage.getItem(); // ["apples", "oranges", "pineapples"]
+const fruitsFromStorage = LocalStorage.getItem("fruits");
 
-LocalStorage.getLength(); // 1
+// type check test, should be errors
 
-LocalStorage.clear();
+LocalStorage.getItem("unknown_key"); // error, key not specified in ILocalStorageMap
 
-LocalStorage.getLength(); // 0
-
-// type check test, should be error
-
-const falsyTypedFruits = [1, "apples", true];
-
-fruitsStorage.setItem(falsyTypedFruits); // type error
+LocalStorage.setItem("fruits", [1, 2, 3]); // error, Type 'number' is not assignable to type 'string'
