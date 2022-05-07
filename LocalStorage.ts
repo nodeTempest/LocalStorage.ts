@@ -21,7 +21,7 @@ const createLocalStorage = <T extends Record<string, any>>() => ({
     localStorage.setItem(key as string, JSON.stringify(value));
   },
 
-  getItem(key: keyof T): T | null {
+  getItem<K extends keyof T>(key: K): T[K] | null {
     return JSON.parse("" + localStorage.getItem(key as string));
   },
 
@@ -54,6 +54,8 @@ const LocalStorage = createLocalStorage<ILocalStorageMap>();
 const fruits = ["apples", "oranges", "bananas"];
 
 LocalStorage.setItem("fruits", fruits);
+
+// typescript is aware of LocalStorage.getItem("fruits") returning string[]
 
 const fruitsFromStorage = LocalStorage.getItem("fruits");
 
