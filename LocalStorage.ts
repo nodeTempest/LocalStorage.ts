@@ -42,7 +42,7 @@ class LocalStorage<T> {
     localStorage.setItem(this.key, JSON.stringify(value));
   }
 
-  public getItem(): T {
+  public getItem(): T | null {
     return JSON.parse("" + localStorage.getItem(this.key));
   }
 
@@ -77,7 +77,7 @@ const fruitsStorage = LocalStorage.createStorage<fruitsType>(FRUITS);
 
 fruitsStorage.setItem(fruits);
 
-const fruitsFromStore = fruitsStorage.getItem(); // ["apples", "oranges", "pineapples"]
+const fruitsFromStorage = fruitsStorage.getItem(); // ["apples", "oranges", "pineapples"]
 
 LocalStorage.getLength(); // 1
 
