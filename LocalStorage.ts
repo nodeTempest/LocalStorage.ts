@@ -16,7 +16,9 @@
  * 2. Methods must be type safe
  **/
 
-const createLocalStorage = <T extends Record<string, any>>() => ({
+type LocalStorageRecordType = Record<string, any> & Record<number | symbol, never>;
+
+const createLocalStorage = <T extends LocalStorageRecordType>() => ({
   setItem<K extends keyof T>(key: K, value: T[K]) {
     localStorage.setItem(key as string, JSON.stringify(value));
   },
@@ -44,12 +46,12 @@ const createLocalStorage = <T extends Record<string, any>>() => ({
 
 // Usage
 
-interface ILocalStorageMap {
+type LocalStorageKeyValueType = {
   fruits: string[];
   favouriteNumbers: number[];
-}
+};
 
-const LocalStorage = createLocalStorage<ILocalStorageMap>();
+const LocalStorage = createLocalStorage<LocalStorageKeyValueType>();
 
 const fruits = ["apples", "oranges", "bananas"];
 
@@ -61,6 +63,6 @@ const fruitsFromStorage = LocalStorage.getItem("fruits");
 
 // type check test, should be errors
 
-LocalStorage.getItem("unknown_key"); // error, key not specified in ILocalStorageMap
+LocalStorage.getItem("unknown_key"); // error, key not specified in LocalStorageKeyValueType
 
 LocalStorage.setItem("fruits", [1, 2, 3]); // error, Type 'number' is not assignable to type 'string'
